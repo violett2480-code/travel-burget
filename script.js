@@ -12,6 +12,18 @@
   var expenseDateInput = document.getElementById("expense-date");
   var expenseAmountInput = document.getElementById("expense-amount");
   var expenseError = document.getElementById("expense-error");
+  var quickExpenseBox = document.getElementById("quick-expenses");
+  var quickButtons = quickExpenseBox.querySelectorAll("[data-quick-name]");
+  var selectedQuickName = "";
+  var QUICK_CATEGORIES = {
+    "아침": "식비",
+    "점심": "식비",
+    "저녁": "식비",
+    "커피": "식비",
+    "교통": "교통비",
+    "숙박": "숙박비",
+    "쇼핑": "기타"
+  };
 
   var summary = document.getElementById("summary");
   var budgetValue = document.getElementById("budget-value");
@@ -56,6 +68,19 @@
   var deleteTripName = document.getElementById("delete-trip-name");
   var deleteTripCancel = document.getElementById("delete-trip-cancel");
   var deleteTripConfirm = document.getElementById("delete-trip-confirm");
+  var backupButton = document.getElementById("backup-records");
+  var backupStatus = document.getElementById("backup-status");
+  var backupError = document.getElementById("backup-error");
+  var restoreOpenButton = document.getElementById("restore-open");
+  var restoreFileInput = document.getElementById("restore-file");
+  var restoreDialog = document.getElementById("restore-dialog");
+  var restoreSummary = document.getElementById("restore-summary");
+  var restoreError = document.getElementById("restore-error");
+  var restoreCancel = document.getElementById("restore-cancel");
+  var restoreConfirm = document.getElementById("restore-confirm");
+  var restorePlan = null;
+  var restoreBusy = false;
+  var RESTORE_SUFFIX = " (복원)";
 
   var state = {
     trips: [],
@@ -843,6 +868,37 @@
     renderSummary();
     renderList();
     renderMoveNotice();
+    syncQuickExpenses();
+  }
+
+  function syncQuickExpenses() {
+    var typedName = expenseNameInput.value.trim();
+    if (selectedQuickName && typedName !== selectedQuickName) {
+      selectedQuickName = "";
+    }
+    Array.prototype.forEach.call(quickButtons, function (button) {
+      var pressed = selectedQuickName !== "" && button.getAttribute("data-quick-name") === selectedQuickName;
+      button.setAttribute("aria-pressed", pressed ? "true" : "false");
+    });
+    quickExpenseBox.hidden = editingId !== null;
+  }
+
+  function applyQuickExpense(name) {
+    var category = QUICK_CATEGORIES[name];
+    if (!category || editingId !== null) {
+      return;
+    }
+    var keptDate = expenseDateInput.value;
+    var keptAmount = expenseAmountInput.value;
+    selectedQuickName = name;
+    expenseNameInput.value = name;
+    expenseCategoryInput.value = category;
+    expenseDateInput.value = keptDate;
+    expenseAmountInput.value = keptAmount;
+    clearMessage(expenseError);
+    markValid(expenseNameInput);
+    syncQuickExpenses();
+    expenseAmountInput.focus();
   }
 
   function createCategorySelect(selectId, selected) {
@@ -898,11 +954,19 @@
     return typeof id === "string" && /^[A-Za-z0-9_-]{1,80}$/.test(id);
   }
 
+  function tripNameLimit(name) {
+    if (typeof name === "string" && name.slice(-RESTORE_SUFFIX.length) === RESTORE_SUFFIX) {
+      return MAX_NAME + RESTORE_SUFFIX.length;
+    }
+    return MAX_NAME;
+  }
+
   function cleanTripName(name) {
     if (typeof name !== "string") {
       return "";
     }
-    return name.trim().slice(0, MAX_NAME);
+    var trimmed = name.trim();
+    return trimmed.slice(0, tripNameLimit(trimmed));
   }
 
   function sanitizeExpenses(list) {
@@ -1031,7 +1095,9 @@
     markValid(expenseAmountInput);
     markValid(expenseDateInput);
     markValid(budgetInput);
+    selectedQuickName = "";
     syncBudgetInput();
+    syncQuickExpenses();
   }
 
   function parseLegacy(raw) {
@@ -1169,18 +1235,12 @@
     saveState();
   }
 
-  function saveState() {
-    var store = getStore();
-    if (!store) {
-      showStorageWarning();
-      return false;
-    }
-
-    var payload = {
+  function buildStoredPayload(source) {
+    return {
       version: 2,
-      activeTripId: state.activeTripId,
-      nextExpenseId: state.nextExpenseId,
-      trips: state.trips.map(function (trip) {
+      activeTripId: source.activeTripId,
+      nextExpenseId: source.nextExpenseId,
+      trips: source.trips.map(function (trip) {
         return {
           id: trip.id,
           name: trip.name,
@@ -1197,9 +1257,17 @@
         };
       })
     };
+  }
+
+  function saveState() {
+    var store = getStore();
+    if (!store) {
+      showStorageWarning();
+      return false;
+    }
 
     try {
-      store.setItem(STORAGE_KEY, JSON.stringify(payload));
+      store.setItem(STORAGE_KEY, JSON.stringify(buildStoredPayload(state)));
       return true;
     } catch (error) {
       showStorageWarning();
@@ -1244,7 +1312,7 @@
 
   function closeDialog(dialog) {
     dialog.hidden = true;
-    if (newTripDialog.hidden && deleteTripDialog.hidden) {
+    if (newTripDialog.hidden && deleteTripDialog.hidden && restoreDialog.hidden) {
       document.body.classList.remove("modal-open");
     }
   }
@@ -1431,6 +1499,16 @@
     clearMessage(expenseError);
     markValid(expenseNameInput);
     markValid(expenseAmountInput);
+    syncQuickExpenses();
+  });
+
+  quickExpenseBox.addEventListener("click", function (event) {
+    var button = event.target.closest("[data-quick-name]");
+    if (!button) {
+      return;
+    }
+    event.preventDefault();
+    applyQuickExpense(button.getAttribute("data-quick-name"));
   });
 
   expenseAmountInput.addEventListener("input", function () {
@@ -1550,6 +1628,7 @@
     var expenseSaved = saveState();
     expenseNameInput.value = "";
     expenseAmountInput.value = "";
+    selectedQuickName = "";
     clearMessage(expenseError);
     markValid(expenseNameInput);
     markValid(expenseAmountInput);
@@ -1809,8 +1888,8 @@
       tripRenameInput.focus();
       return;
     }
-    if (name.length > MAX_NAME) {
-      showMessage(tripRenameError, "여행 이름은 30자 이하로 입력해 주세요.");
+    if (name.length > tripNameLimit(name)) {
+      showMessage(tripRenameError, "여행 이름은 30자 이하로 입력해 주세요. 복원한 여행은 ‘(복원)’까지 35자입니다.");
       tripRenameInput.focus();
       return;
     }
@@ -1865,6 +1944,8 @@
       dialog = newTripDialog;
     } else if (!deleteTripDialog.hidden) {
       dialog = deleteTripDialog;
+    } else if (!restoreDialog.hidden) {
+      dialog = restoreDialog;
     }
     if (!dialog) {
       return;
@@ -1873,6 +1954,8 @@
       event.preventDefault();
       if (dialog === newTripDialog) {
         cancelNewTrip();
+      } else if (dialog === restoreDialog) {
+        cancelRestore();
       } else {
         cancelDeleteTrip();
       }
@@ -1880,6 +1963,642 @@
     }
     if (event.key === "Tab") {
       trapFocus(event, dialog);
+    }
+  });
+
+  function pad2(value) {
+    return (value < 10 ? "0" : "") + value;
+  }
+
+  function backupFileStamp(date) {
+    return date.getFullYear()
+      + "-" + pad2(date.getMonth() + 1)
+      + "-" + pad2(date.getDate())
+      + "-" + pad2(date.getHours())
+      + pad2(date.getMinutes())
+      + pad2(date.getSeconds());
+  }
+
+  function backupLocalIso(date) {
+    var offset = -date.getTimezoneOffset();
+    var sign = offset >= 0 ? "+" : "-";
+    var abs = Math.abs(offset);
+    return date.getFullYear()
+      + "-" + pad2(date.getMonth() + 1)
+      + "-" + pad2(date.getDate())
+      + "T" + pad2(date.getHours())
+      + ":" + pad2(date.getMinutes())
+      + ":" + pad2(date.getSeconds())
+      + sign + pad2(Math.floor(abs / 60))
+      + ":" + pad2(abs % 60);
+  }
+
+  function readBackupStore() {
+    try {
+      if (!window.localStorage) {
+        return null;
+      }
+      return window.localStorage;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function inspectExpenseList(expenses) {
+    var index;
+    if (!Array.isArray(expenses)) {
+      return false;
+    }
+    for (index = 0; index < expenses.length; index += 1) {
+      if (!expenses[index] || typeof expenses[index] !== "object" || Array.isArray(expenses[index])) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function inspectStoredTrips(raw) {
+    var data;
+    var index;
+    var trip;
+    try {
+      data = JSON.parse(raw);
+    } catch (error) {
+      return { ok: false, reason: "damaged" };
+    }
+    if (!data || typeof data !== "object" || Array.isArray(data) || !Array.isArray(data.trips)) {
+      return { ok: false, reason: "damaged" };
+    }
+    if (data.trips.length === 0) {
+      return { ok: false, reason: "empty" };
+    }
+    for (index = 0; index < data.trips.length; index += 1) {
+      trip = data.trips[index];
+      if (!trip || typeof trip !== "object" || Array.isArray(trip) || !inspectExpenseList(trip.expenses)) {
+        return { ok: false, reason: "damaged" };
+      }
+    }
+    return { ok: true, sourceKey: STORAGE_KEY, data: data };
+  }
+
+  function inspectLegacyForBackup(raw) {
+    var data;
+    var nextId;
+    try {
+      data = JSON.parse(raw);
+    } catch (error) {
+      return { ok: false, reason: "damaged" };
+    }
+    if (!data || typeof data !== "object" || Array.isArray(data) || !inspectExpenseList(data.expenses)) {
+      return { ok: false, reason: "damaged" };
+    }
+    if (data.expenses.length === 0 && typeof data.budget !== "number") {
+      return { ok: false, reason: "empty" };
+    }
+    nextId = 1;
+    data.expenses.forEach(function (expense) {
+      if (typeof expense.id === "number" && expense.id >= nextId) {
+        nextId = expense.id + 1;
+      }
+    });
+    if (typeof data.nextId === "number" && data.nextId > nextId) {
+      nextId = data.nextId;
+    }
+    return {
+      ok: true,
+      sourceKey: LEGACY_KEY,
+      data: {
+        version: 2,
+        activeTripId: "trip-legacy",
+        nextExpenseId: nextId,
+        trips: [{
+          id: "trip-legacy",
+          name: typeof data.name === "string" && data.name ? data.name : LEGACY_TRIP_NAME,
+          budget: typeof data.budget === "number" ? data.budget : null,
+          expenses: data.expenses
+        }]
+      }
+    };
+  }
+
+  function readBackupSource() {
+    var store = readBackupStore();
+    var fresh;
+    var legacy;
+    if (!store) {
+      return { ok: false, reason: "unavailable" };
+    }
+    fresh = readStorageItem(store, STORAGE_KEY);
+    if (!fresh.ok) {
+      return { ok: false, reason: "unavailable" };
+    }
+    if (fresh.value !== null) {
+      if (!fresh.value) {
+        return { ok: false, reason: "damaged" };
+      }
+      return inspectStoredTrips(fresh.value);
+    }
+    legacy = readStorageItem(store, LEGACY_KEY);
+    if (!legacy.ok) {
+      return { ok: false, reason: "unavailable" };
+    }
+    if (legacy.value === null) {
+      return { ok: false, reason: "empty" };
+    }
+    if (!legacy.value) {
+      return { ok: false, reason: "damaged" };
+    }
+    return inspectLegacyForBackup(legacy.value);
+  }
+
+  function backupFailureText(reason) {
+    if (reason === "empty") {
+      return "보관할 여행 기록이 없습니다. 백업 파일을 만들지 않았습니다.";
+    }
+    if (reason === "damaged") {
+      return "저장된 여행 기록을 확인하지 못했습니다. 빈 백업 파일은 만들지 않았습니다.";
+    }
+    return "기록을 읽지 못했습니다. 백업 파일을 만들지 않았습니다.";
+  }
+
+  function showBackupFailure(reason) {
+    clearMessage(backupStatus);
+    showMessage(backupError, backupFailureText(reason));
+  }
+
+  function downloadBackupFile(source) {
+    var now = new Date();
+    var stamp = backupFileStamp(now);
+    var file = {
+      appId: "travel-budget",
+      appName: "여행 경비 계산기",
+      backupVersion: 1,
+      backedUpAt: backupLocalIso(now),
+      sourceKey: source.sourceKey,
+      data: source.data
+    };
+    var json = JSON.stringify(file);
+    var blob = new Blob([json], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.href = url;
+    link.download = "여행경비-백업-" + stamp + ".json";
+    link.rel = "noopener";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.setTimeout(function () {
+      URL.revokeObjectURL(url);
+    }, 4000);
+    clearMessage(backupError);
+    showMessage(
+      backupStatus,
+      "백업 파일 다운로드를 시작했어요.\n다운로드 목록에서 확인해 주세요."
+    );
+  }
+
+  backupButton.addEventListener("click", function () {
+    var source = readBackupSource();
+    if (!source.ok) {
+      showBackupFailure(source.reason);
+      return;
+    }
+    try {
+      downloadBackupFile(source);
+    } catch (error) {
+      showBackupFailure("unavailable");
+    }
+  });
+
+  function backupTimeLabel(value) {
+    var match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})[+-](\d{2}):(\d{2})$/.exec(value);
+    var hour;
+    var minute;
+    var second;
+    var offsetHour;
+    var offsetMinute;
+    if (!match || !isValidDateString(match[1] + "-" + match[2] + "-" + match[3])) {
+      return "";
+    }
+    hour = Number(match[4]);
+    minute = Number(match[5]);
+    second = Number(match[6]);
+    offsetHour = Number(match[7]);
+    offsetMinute = Number(match[8]);
+    if (hour > 23 || minute > 59 || second > 59 || offsetHour > 23 || offsetMinute > 59) {
+      return "";
+    }
+    return Number(match[1]) + "년 " + Number(match[2]) + "월 " + Number(match[3]) + "일 "
+      + match[4] + ":" + match[5] + ":" + match[6];
+  }
+
+  function restoreExpenseDate(value) {
+    if (value === null || typeof value === "undefined") {
+      return { ok: true, date: null };
+    }
+    if (isValidDateString(value)) {
+      return { ok: true, date: value };
+    }
+    return { ok: false, date: null };
+  }
+
+  function validateBackupDocument(file) {
+    var data;
+    var seenTripIds = {};
+    var seenExpenseIds = {};
+    var trips = [];
+    var tripIndex;
+    var trip;
+    var tripName;
+    var expenseIndex;
+    var expense;
+    var dateResult;
+    var where;
+    if (!file || typeof file !== "object" || Array.isArray(file)) {
+      return { ok: false, message: "백업 파일의 내용이 올바르지 않습니다." };
+    }
+    if (file.appId !== "travel-budget" || file.appName !== "여행 경비 계산기") {
+      return { ok: false, message: "이 앱의 백업 파일이 아닙니다. 기존 기록은 그대로입니다." };
+    }
+    if (file.backupVersion !== 1) {
+      return { ok: false, message: "지원하지 않는 백업 형식입니다. 이 앱은 형식 버전 1만 불러올 수 있습니다." };
+    }
+    if (!backupTimeLabel(file.backedUpAt)) {
+      return { ok: false, message: "백업 시각이 올바르지 않습니다. 기존 기록은 그대로입니다." };
+    }
+    if (file.sourceKey !== STORAGE_KEY && file.sourceKey !== LEGACY_KEY) {
+      return { ok: false, message: "백업 파일의 저장 정보가 올바르지 않습니다. 기존 기록은 그대로입니다." };
+    }
+    data = file.data;
+    if (!data || typeof data !== "object" || Array.isArray(data) || data.version !== 2 || !Array.isArray(data.trips)) {
+      return { ok: false, message: "여행 기록 구조가 올바르지 않습니다. 기존 기록은 그대로입니다." };
+    }
+    if (!Number.isSafeInteger(data.nextExpenseId) || data.nextExpenseId < 1) {
+      return { ok: false, message: "지출 식별자 정보가 올바르지 않습니다. 기존 기록은 그대로입니다." };
+    }
+    if (data.trips.length === 0) {
+      return { ok: false, message: "가져올 여행이 없습니다. 기존 기록은 그대로입니다." };
+    }
+    for (tripIndex = 0; tripIndex < data.trips.length; tripIndex += 1) {
+      trip = data.trips[tripIndex];
+      where = (tripIndex + 1) + "번째 여행";
+      if (!trip || typeof trip !== "object" || Array.isArray(trip)) {
+        return { ok: false, message: where + "의 구조가 올바르지 않습니다. 기존 기록은 그대로입니다." };
+      }
+      if (!isValidTripId(trip.id) || seenTripIds[trip.id]) {
+        return { ok: false, message: where + "의 식별자가 올바르지 않거나 중복되었습니다. 기존 기록은 그대로입니다." };
+      }
+      seenTripIds[trip.id] = true;
+      if (typeof trip.name !== "string" || trip.name !== trip.name.trim() || trip.name === "" || trip.name.length > MAX_NAME) {
+        return { ok: false, message: where + "의 이름이 올바르지 않습니다. 이름을 바꾸거나 지우지 않고 불러오기를 멈췄습니다." };
+      }
+      tripName = trip.name;
+      where = "‘" + tripName + "’ 여행";
+      if (trip.budget !== null && !isValidBudget(trip.budget)) {
+        return { ok: false, message: where + "의 예산이 올바르지 않습니다. 기존 기록은 그대로입니다." };
+      }
+      if (!Array.isArray(trip.expenses)) {
+        return { ok: false, message: where + "의 지출 목록이 올바르지 않습니다. 기존 기록은 그대로입니다." };
+      }
+      trips.push({
+        name: tripName,
+        budget: trip.budget,
+        expenses: []
+      });
+      for (expenseIndex = 0; expenseIndex < trip.expenses.length; expenseIndex += 1) {
+        expense = trip.expenses[expenseIndex];
+        where = "‘" + tripName + "’ 여행의 " + (expenseIndex + 1) + "번째 지출";
+        if (!expense || typeof expense !== "object" || Array.isArray(expense)) {
+          return { ok: false, message: where + " 구조가 올바르지 않습니다. 잘못된 항목은 빼지 않고 불러오기를 멈췄습니다." };
+        }
+        if (!Number.isSafeInteger(expense.id) || expense.id < 1 || seenExpenseIds[expense.id]) {
+          return { ok: false, message: where + " 식별자가 올바르지 않거나 중복되었습니다. 기존 기록은 그대로입니다." };
+        }
+        seenExpenseIds[expense.id] = true;
+        if (typeof expense.name !== "string" || expense.name !== expense.name.trim() || expense.name === "" || expense.name.length > MAX_NAME) {
+          return { ok: false, message: where + " 이름이 올바르지 않습니다. 이름을 고치지 않고 불러오기를 멈췄습니다." };
+        }
+        if (!CATEGORIES[expense.category]) {
+          return { ok: false, message: where + " 분류가 올바르지 않습니다. 식비, 교통비, 숙박비, 기타만 불러올 수 있습니다." };
+        }
+        if (!isValidMoney(expense.amount)) {
+          return { ok: false, message: where + " 금액이 올바르지 않습니다. 1원 이상의 정수만 불러올 수 있습니다." };
+        }
+        dateResult = restoreExpenseDate(expense.date);
+        if (!dateResult.ok) {
+          return { ok: false, message: where + " 날짜가 올바르지 않습니다. 날짜가 없는 기록은 빈 날짜만 허용됩니다." };
+        }
+        trips[trips.length - 1].expenses.push({
+          name: expense.name,
+          category: expense.category,
+          amount: expense.amount,
+          date: dateResult.date
+        });
+      }
+    }
+    if (typeof data.activeTripId !== "string" || !seenTripIds[data.activeTripId]) {
+      return { ok: false, message: "백업 안의 선택 여행 정보가 올바르지 않습니다. 기존 기록은 그대로입니다." };
+    }
+    return {
+      ok: true,
+      backedUpAt: file.backedUpAt,
+      dateLabel: backupTimeLabel(file.backedUpAt),
+      trips: trips
+    };
+  }
+
+  function expenseContentKey(expense) {
+    return expense.name + "\n" + expense.category + "\n" + String(expense.amount) + "\n" + (expense.date || "");
+  }
+
+  function tripContentKey(name, budget, expenses) {
+    return name + "\n" + String(budget) + "\n" + expenses.map(expenseContentKey).slice().sort().join("\n");
+  }
+
+  function findRepeatedRestore(trips) {
+    var available = state.trips.map(function (trip) {
+      return tripContentKey(trip.name, trip.budget, trip.expenses);
+    });
+    var matched = [];
+    var missing = 0;
+    trips.forEach(function (trip) {
+      var key = tripContentKey(trip.name + RESTORE_SUFFIX, trip.budget, trip.expenses);
+      var index = available.indexOf(key);
+      if (index === -1) {
+        missing += 1;
+        return;
+      }
+      matched.push(trip.name + RESTORE_SUFFIX);
+      available.splice(index, 1);
+    });
+    return { matched: matched, missing: missing };
+  }
+
+  function createTripIdAgainst(trips) {
+    var id = "";
+    var exists = true;
+    while (exists) {
+      id = "trip-" + Date.now().toString(36) + "-" + Math.floor(Math.random() * 100000).toString(36);
+      exists = false;
+      trips.forEach(function (trip) {
+        if (trip.id === id) {
+          exists = true;
+        }
+      });
+    }
+    return id;
+  }
+
+  function prepareRestoredState(trips) {
+    var nextTrips = cloneState().trips;
+    var nextExpenseId = expenseIdCeiling(nextTrips, state.nextExpenseId);
+    var seenTripIds = {};
+    var seenExpenseIds = {};
+    var index;
+    nextTrips.forEach(function (trip) {
+      seenTripIds[trip.id] = true;
+      trip.expenses.forEach(function (expense) {
+        seenExpenseIds[expense.id] = true;
+      });
+    });
+    for (index = 0; index < trips.length; index += 1) {
+      var source = trips[index];
+      var restoredName = source.name + RESTORE_SUFFIX;
+      var record;
+      var expenses = [];
+      var expenseIndex;
+      if (restoredName.length > tripNameLimit(restoredName)) {
+        return { ok: false, message: "‘" + source.name + "’ 여행 이름에 ‘(복원)’을 붙이면 너무 깁니다. 추가하지 않았습니다." };
+      }
+      record = {
+        id: createTripIdAgainst(nextTrips),
+        name: restoredName,
+        budget: source.budget,
+        expenses: expenses
+      };
+      if (!isValidTripId(record.id) || seenTripIds[record.id]) {
+        return { ok: false, message: "새 여행 식별자를 만들지 못했습니다. 기존 기록은 그대로입니다." };
+      }
+      for (expenseIndex = 0; expenseIndex < source.expenses.length; expenseIndex += 1) {
+        var sourceExpense = source.expenses[expenseIndex];
+        var expense = {
+          id: nextExpenseId,
+          name: sourceExpense.name,
+          category: sourceExpense.category,
+          amount: sourceExpense.amount,
+          date: sourceExpense.date
+        };
+        if (!isValidExpense(expense) || seenExpenseIds[expense.id] || (expense.date !== null && !isValidDateString(expense.date))) {
+          return { ok: false, message: "추가할 지출을 확인하지 못했습니다. 기존 기록은 그대로입니다." };
+        }
+        seenExpenseIds[expense.id] = true;
+        expenses.push(expense);
+        nextExpenseId += 1;
+      }
+      seenTripIds[record.id] = true;
+      nextTrips.push(record);
+    }
+    for (index = 0; index < state.trips.length; index += 1) {
+      if (JSON.stringify(buildStoredPayload({ activeTripId: null, nextExpenseId: 1, trips: [state.trips[index]] }).trips[0])
+        !== JSON.stringify(buildStoredPayload({ activeTripId: null, nextExpenseId: 1, trips: [nextTrips[index]] }).trips[0])) {
+        return { ok: false, message: "기존 여행을 확인하지 못했습니다. 추가하지 않았습니다." };
+      }
+    }
+    return {
+      ok: true,
+      trips: nextTrips,
+      nextExpenseId: nextExpenseId,
+      activeTripId: state.activeTripId && seenTripIds[state.activeTripId] ? state.activeTripId : nextTrips[0].id
+    };
+  }
+
+  function writeRestoredPayload(payload) {
+    var store;
+    var previous;
+    var json;
+    try {
+      if (!window.localStorage) {
+        return false;
+      }
+      store = window.localStorage;
+      previous = store.getItem(STORAGE_KEY);
+      json = JSON.stringify(payload);
+      store.setItem(STORAGE_KEY, json);
+      if (store.getItem(STORAGE_KEY) !== json) {
+        throw new Error("mismatch");
+      }
+      return true;
+    } catch (error) {
+      try {
+        if (store && store.getItem(STORAGE_KEY) !== previous) {
+          if (previous === null) {
+            store.removeItem(STORAGE_KEY);
+          } else {
+            store.setItem(STORAGE_KEY, previous);
+          }
+        }
+      } catch (restoreError) {
+        showStorageWarning();
+      }
+      return false;
+    }
+  }
+
+  function commitRestoredTrips(trips) {
+    var prepared = prepareRestoredState(trips);
+    var payload;
+    if (!prepared.ok) {
+      return prepared;
+    }
+    payload = buildStoredPayload({
+      activeTripId: prepared.activeTripId,
+      nextExpenseId: prepared.nextExpenseId,
+      trips: prepared.trips
+    });
+    if (!writeRestoredPayload(payload)) {
+      return { ok: false, message: "기록을 저장하지 못했습니다. 용량이 부족하거나 저장이 막혀 있습니다. 기존 여행은 그대로입니다." };
+    }
+    state.trips = prepared.trips;
+    state.nextExpenseId = prepared.nextExpenseId;
+    state.activeTripId = prepared.activeTripId;
+    return { ok: true };
+  }
+
+  function addRestoreLine(label, value) {
+    var line = document.createElement("p");
+    line.textContent = label + " " + value;
+    restoreSummary.appendChild(line);
+  }
+
+  function showRestorePlan(plan) {
+    var totalCount = 0;
+    var totalAmount = 0;
+    restoreSummary.replaceChildren();
+    addRestoreLine("백업 날짜", plan.dateLabel);
+    addRestoreLine("여행 수", plan.trips.length + "개");
+    plan.trips.forEach(function (trip) {
+      var line = document.createElement("p");
+      line.textContent = trip.name + RESTORE_SUFFIX;
+      restoreSummary.appendChild(line);
+      totalCount += trip.expenses.length;
+      trip.expenses.forEach(function (expense) {
+        totalAmount += expense.amount;
+      });
+    });
+    addRestoreLine("전체 지출", totalCount + "건");
+    addRestoreLine("지출 합계", formatWon(totalAmount));
+    clearMessage(restoreError);
+    restoreConfirm.disabled = false;
+    restoreBusy = false;
+    openDialog(restoreDialog, restoreCancel);
+  }
+
+  function cancelRestore() {
+    restorePlan = null;
+    restoreBusy = false;
+    restoreConfirm.disabled = false;
+    clearMessage(restoreError);
+    closeDialog(restoreDialog);
+  }
+
+  function confirmRestore() {
+    var plan;
+    var result;
+    if (restoreBusy || !restorePlan) {
+      return;
+    }
+    restoreBusy = true;
+    restoreConfirm.disabled = true;
+    plan = restorePlan;
+    restorePlan = null;
+    result = commitRestoredTrips(plan.trips);
+    if (!result.ok) {
+      restorePlan = plan;
+      restoreBusy = false;
+      restoreConfirm.disabled = false;
+      showMessage(restoreError, result.message);
+      return;
+    }
+    restoreBusy = false;
+    restoreConfirm.disabled = false;
+    closeDialog(restoreDialog);
+    clearMessage(backupError);
+    showMessage(backupStatus, "백업의 여행을 추가했습니다.");
+    render();
+  }
+
+  function inspectRestoreText(text) {
+    var file;
+    var plan;
+    var repeated;
+    try {
+      file = JSON.parse(text);
+    } catch (error) {
+      showMessage(backupError, "파일을 읽었지만 올바른 JSON이 아닙니다. 기존 기록은 그대로입니다.");
+      clearMessage(backupStatus);
+      return;
+    }
+    plan = validateBackupDocument(file);
+    if (!plan.ok) {
+      showMessage(backupError, plan.message);
+      clearMessage(backupStatus);
+      return;
+    }
+    repeated = findRepeatedRestore(plan.trips);
+    if (repeated.matched.length > 0) {
+      showMessage(
+        backupError,
+        repeated.missing === 0
+          ? "이 백업의 여행은 이미 추가되어 있습니다. 다시 추가하지 않았습니다."
+          : "같은 내용의 여행이 이미 있습니다: " + repeated.matched.join(", ") + ". 일부만 넣지 않고 추가를 멈췄습니다."
+      );
+      clearMessage(backupStatus);
+      return;
+    }
+    restorePlan = plan;
+    clearMessage(backupError);
+    clearMessage(backupStatus);
+    showRestorePlan(plan);
+  }
+
+  restoreOpenButton.addEventListener("click", function () {
+    restoreFileInput.value = "";
+    restoreFileInput.click();
+  });
+
+  restoreFileInput.addEventListener("change", function () {
+    var file = restoreFileInput.files && restoreFileInput.files[0];
+    var reader;
+    if (restoreDialog && !restoreDialog.hidden) {
+      cancelRestore();
+    }
+    clearMessage(backupStatus);
+    clearMessage(backupError);
+    if (!file) {
+      return;
+    }
+    reader = new FileReader();
+    reader.onload = function () {
+      if (typeof reader.result !== "string") {
+        showMessage(backupError, "파일을 읽지 못했습니다. 기존 기록은 그대로입니다.");
+        return;
+      }
+      inspectRestoreText(reader.result);
+    };
+    reader.onerror = function () {
+      showMessage(backupError, "파일을 읽지 못했습니다. 기존 기록은 그대로입니다.");
+      clearMessage(backupStatus);
+    };
+    reader.readAsText(file);
+  });
+
+  restoreCancel.addEventListener("click", cancelRestore);
+
+  restoreConfirm.addEventListener("click", confirmRestore);
+
+  restoreDialog.addEventListener("click", function (event) {
+    if (event.target === restoreDialog) {
+      cancelRestore();
     }
   });
 

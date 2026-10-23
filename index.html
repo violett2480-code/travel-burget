@@ -3,8 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#FFF8EF">
+  <meta name="apple-mobile-web-app-title" content="여행경비">
   <title>여행 경비 계산기</title>
-  <link rel="stylesheet" href="style.css?v=notebook2">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="style.css?v=restore1">
 </head>
 <body>
   <main class="app">
@@ -17,16 +22,16 @@
           <circle cx="17" cy="27" r="1.7" fill="#382B26"></circle>
           <circle cx="31" cy="27" r="1.7" fill="#382B26"></circle>
         </svg>
-        <span>여행 경비 계산기</span>
+        <span>🧳 여행 경비 계산기&#8288;✨</span>
       </h1>
       <p id="current-trip-name" class="current-trip" hidden></p>
-      <button type="button" id="new-trip-open" class="btn btn-primary btn-new-trip">새 여행 시작</button>
-      <p class="lead">예산을 정한 뒤 지출을 더하면, 남은 돈을 바로 보여 드립니다.</p>
+      <button type="button" id="new-trip-open" class="btn btn-primary btn-new-trip">🧳 새 여행 시작</button>
+      <p class="lead">🌸 예산을 정한 뒤 지출을 더하면, 남은 돈을 바로 보여 드립니다.</p>
       <p id="storage-notice" class="message message-error storage-notice" role="alert" hidden></p>
     </header>
 
     <section id="no-trip" class="card" hidden>
-      <h2>여행을 만들어 주세요</h2>
+      <h2>🌸 여행을 만들어 주세요</h2>
       <p class="empty">저장된 여행이 없습니다. 위의 ‘새 여행 시작’을 눌러 새 여행을 만들어 주세요.</p>
     </section>
 
@@ -36,7 +41,7 @@
           <rect x="4" y="3" width="16" height="18" rx="3" fill="#FFF8EF" stroke="#382B26" stroke-width="1.6"></rect>
           <path d="M8 8h8M8 12h8M8 16h5" fill="none" stroke="#382B26" stroke-width="1.6" stroke-linecap="round"></path>
         </svg>
-        <span>여행 목록</span>
+        <span>🧳 여행 목록</span>
       </h2>
       <label for="trip-select">저장된 여행</label>
       <select id="trip-select"></select>
@@ -57,22 +62,22 @@
         <input
           id="trip-rename-input"
           type="text"
-          maxlength="30"
+          maxlength="35"
           autocomplete="off"
           placeholder="예: 제주도 여행"
         >
         <p class="hint">보고 있는 여행의 이름을 바꿀 수 있습니다.</p>
         <p id="trip-rename-error" class="message message-error" role="alert" hidden></p>
-        <button type="button" id="trip-rename-button" class="btn btn-secondary">이름 변경</button>
+        <button type="button" id="trip-rename-button" class="btn btn-secondary">📝 이름 변경</button>
         <button type="button" id="trip-delete-open" class="btn btn-delete">이 여행 삭제</button>
       </div>
     </section>
 
     <div id="calculator">
     <section class="card" aria-labelledby="budget-title">
-      <h2 id="budget-title">1. 예산 설정</h2>
+      <h2 id="budget-title">1. 💰 예산 설정</h2>
       <form id="budget-form" novalidate>
-        <label for="budget-input">여행 전체 예산 (원)</label>
+        <label for="budget-input">💰 여행 전체 예산 (원)</label>
         <div class="money-field">
           <input
             id="budget-input"
@@ -88,14 +93,27 @@
         <p class="hint">숫자만 입력해 주세요. 쉼표가 있어도 됩니다.</p>
         <p id="budget-error" class="message message-error" role="alert" hidden></p>
         <p id="budget-success" class="message message-success" role="status" hidden></p>
-        <button type="submit" class="btn btn-primary">예산 설정</button>
+        <button type="submit" class="btn btn-primary">💰 예산 설정</button>
       </form>
     </section>
 
     <section class="card" aria-labelledby="expense-title">
-      <h2 id="expense-title">2. 지출 추가</h2>
+      <h2 id="expense-title">2. 📝 지출 추가</h2>
       <form id="expense-form" novalidate>
-        <label for="expense-name">항목 이름</label>
+        <div id="quick-expenses" class="quick-expenses" role="group" aria-label="자주 쓰는 지출">
+          <p class="quick-lead">자주 쓰는 지출</p>
+          <div class="quick-list">
+            <button type="button" class="btn quick-btn" data-quick-name="아침" aria-pressed="false">🍳 아침</button>
+            <button type="button" class="btn quick-btn" data-quick-name="점심" aria-pressed="false">🍚 점심</button>
+            <button type="button" class="btn quick-btn" data-quick-name="저녁" aria-pressed="false">🍽️ 저녁</button>
+            <button type="button" class="btn quick-btn" data-quick-name="커피" aria-pressed="false">☕ 커피</button>
+            <button type="button" class="btn quick-btn" data-quick-name="교통" aria-pressed="false">🚌 교통</button>
+            <button type="button" class="btn quick-btn" data-quick-name="숙박" aria-pressed="false">🏨 숙박</button>
+            <button type="button" class="btn quick-btn" data-quick-name="쇼핑" aria-pressed="false">🛍️ 쇼핑</button>
+          </div>
+          <p class="hint">누르면 이름과 분류만 채워집니다. 저장은 ‘지출 추가’를 누를 때 한 건만 됩니다.</p>
+        </div>
+        <label for="expense-name">📝 항목 이름</label>
         <input
           id="expense-name"
           type="text"
@@ -112,11 +130,11 @@
           <option value="기타">기타</option>
         </select>
 
-        <label for="expense-date">지출 날짜</label>
+        <label for="expense-date">📅 지출 날짜</label>
         <input id="expense-date" type="date" autocomplete="off">
         <p class="hint">오늘 날짜가 미리 들어가 있습니다. 달력에서 다른 날을 고를 수 있습니다.</p>
 
-        <label for="expense-amount">금액 (원)</label>
+        <label for="expense-amount">💰 금액 (원)</label>
         <div class="money-field">
           <input
             id="expense-amount"
@@ -131,20 +149,20 @@
         </div>
         <p class="hint">1원 이상의 숫자로 입력해 주세요.</p>
         <p id="expense-error" class="message message-error" role="alert" hidden></p>
-        <button type="submit" class="btn btn-primary">지출 추가</button>
+        <button type="submit" class="btn btn-primary">📝 지출 추가</button>
       </form>
     </section>
 
     <section class="card" id="summary" aria-labelledby="summary-title">
-      <h2 id="summary-title">3. 계산 결과</h2>
+      <h2 id="summary-title">3. ✨ 계산 결과</h2>
       <p class="hint">여기 금액은 날짜와 상관없이 여행 전체 기준입니다.</p>
       <dl class="summary-list">
         <div class="summary-row">
-          <dt>여행 전체 예산</dt>
+          <dt>💰 여행 전체 예산</dt>
           <dd id="budget-value">아직 없습니다</dd>
         </div>
         <div class="summary-row">
-          <dt>전체 총지출</dt>
+          <dt>📝 전체 총지출</dt>
           <dd id="spent-value">0원</dd>
         </div>
         <div class="summary-row">
@@ -158,10 +176,10 @@
     </section>
 
     <section class="card" aria-labelledby="list-title">
-      <h2 id="list-title">4. 지출 목록</h2>
+      <h2 id="list-title">4. 📅 지출 목록</h2>
       <div class="list-tools">
-        <button type="button" id="view-all" class="btn btn-primary" aria-pressed="true">전체 보기</button>
-        <label for="filter-date">날짜 선택</label>
+        <button type="button" id="view-all" class="btn btn-primary" aria-pressed="true">📅 전체 보기</button>
+        <label for="filter-date">📅 날짜 선택</label>
         <input id="filter-date" type="date" autocomplete="off">
         <p class="hint">날짜를 고르면 그 날의 지출과 하루 합계만 볼 수 있습니다.</p>
       </div>
@@ -174,13 +192,23 @@
     </section>
     </div>
 
+    <section class="card" id="backup-card" aria-labelledby="backup-title">
+      <h2 id="backup-title">💾 기록 보관</h2>
+      <p class="backup-note">모든 여행 기록을 파일로 보관합니다.<br>백업해도 앱의 기록은 그대로 남아 있어요.</p>
+      <button type="button" id="backup-records" class="btn btn-primary backup-btn">💾 여행 기록 백업</button>
+      <button type="button" id="restore-open" class="btn btn-secondary backup-btn">📂 백업 불러오기</button>
+      <input id="restore-file" type="file" accept="application/json,.json" hidden>
+      <p id="backup-status" class="message message-success" role="status" hidden></p>
+      <p id="backup-error" class="message message-error" role="alert" hidden></p>
+    </section>
+
     <p id="footnote" class="footnote">기록은 현재 브라우저에 저장됩니다. 브라우저 데이터를 삭제하면 기록이 사라질 수 있습니다.</p>
   </main>
 
   <div id="new-trip-dialog" class="modal" hidden>
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="new-trip-title">
-      <h2 id="new-trip-title">새 여행 시작</h2>
-      <p class="keep-notice">현재 여행 기록은 보관됩니다.</p>
+      <h2 id="new-trip-title">🧳 새 여행 시작</h2>
+      <p class="keep-notice">🌸 현재 여행 기록은 보관됩니다.</p>
       <form id="new-trip-form" novalidate>
         <label for="new-trip-name">여행 이름</label>
         <input
@@ -194,9 +222,22 @@
         <p id="new-trip-error" class="message message-error" role="alert" hidden></p>
         <div class="button-stack">
           <button type="button" id="new-trip-cancel" class="btn btn-secondary">취소</button>
-          <button type="submit" class="btn btn-primary">새 여행 만들기</button>
+          <button type="submit" class="btn btn-primary">🧳 새 여행 만들기</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <div id="restore-dialog" class="modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="restore-title" aria-describedby="restore-summary restore-keep">
+      <h2 id="restore-title">📂 백업 불러오기</h2>
+      <div id="restore-summary" class="restore-summary"></div>
+      <p id="restore-keep" class="keep-notice">기존 여행은 그대로 두고 별도 여행으로 추가합니다.</p>
+      <p id="restore-error" class="message message-error" role="alert" hidden></p>
+      <div class="button-stack">
+        <button type="button" id="restore-cancel" class="btn btn-secondary">취소</button>
+        <button type="button" id="restore-confirm" class="btn btn-primary">여행 추가하기</button>
+      </div>
     </div>
   </div>
 
@@ -214,6 +255,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=manage1"></script>
+  <script src="script.js?v=restore1"></script>
 </body>
 </html>

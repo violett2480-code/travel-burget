@@ -1,22 +1,26 @@
 :root {
   color-scheme: light;
-  --cream: #fff8ef;
-  --card: #ffffff;
-  --ink: #382b26;
-  --ink-soft: #5c463c;
-  --line: #eadfd2;
-  --line-strong: #e0d0c0;
-  --peach: #ffd2b8;
-  --peach-press: #f0b48f;
-  --peach-soft: #ffe4d2;
-  --mint: #e7f5ec;
+  --cream: #fff4e6;
+  --card: #fffdfb;
+  --ink: #2c211c;
+  --ink-soft: #5a4338;
+  --line: #f0e0d2;
+  --line-strong: #e4d0c0;
+  --peach: #ffd3bc;
+  --peach-deep: #ffc2a4;
+  --peach-press: #f0b08a;
+  --lavender: #f3e9ff;
+  --lavender-deep: #e3d2fa;
+  --mint: #e7f7ee;
+  --mint-deep: #c9ecd8;
   --green: #0e6b3c;
   --error: #c62828;
   --error-ink: #9f1d1d;
   --error-bg: #fdecec;
   --ok: #0e6b3c;
   --ok-bg: #e7f5ec;
-  --shadow: 0 4px 14px rgba(56, 43, 38, 0.06);
+  --shadow: 0 6px 16px rgba(92, 62, 84, 0.08);
+  --bling: linear-gradient(135deg, #ffbfa0 0%, #e7c8ff 48%, #9edfbe 100%);
 }
 
 * {
@@ -27,14 +31,18 @@ html,
 body {
   margin: 0;
   max-width: 100%;
-  overflow-x: clip;
+  overflow-x: hidden;
 }
 
 body {
-  background: var(--cream);
+  background-color: var(--cream);
+  background-image:
+    radial-gradient(circle at 0 0, rgba(255, 210, 186, 0.75) 0, rgba(255, 210, 186, 0) 42%),
+    radial-gradient(circle at 100% 0, rgba(230, 210, 255, 0.8) 0, rgba(230, 210, 255, 0) 46%),
+    radial-gradient(circle at 100% 100%, rgba(198, 236, 214, 0.75) 0, rgba(198, 236, 214, 0) 42%);
   color: var(--ink);
   font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
-  font-size: 20px;
+  font-size: 21px;
   font-weight: 400;
   line-height: 1.45;
   word-break: keep-all;
@@ -44,8 +52,8 @@ body {
 .app {
   width: min(640px, 100%);
   margin: 0 auto;
-  padding: 20px 12px 40px;
-  overflow-x: clip;
+  padding: 12px 10px 24px;
+  overflow-x: hidden;
 }
 
 h1,
@@ -59,34 +67,47 @@ ul {
   margin: 0;
 }
 
+.page-header {
+  margin-bottom: 10px;
+  padding: 12px;
+  border: 3px solid transparent;
+  border-radius: 22px;
+  background:
+    linear-gradient(#fff8f1, #fff3e8) padding-box,
+    var(--bling) border-box;
+  box-shadow: var(--shadow);
+}
+
 .page-title {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
-  font-size: 32px;
-  line-height: 1.25;
+  font-size: 30px;
+  line-height: 1.3;
   font-weight: 800;
 }
 
 .page-title span {
   flex: 1 1 auto;
   min-width: 0;
-  padding-top: 4px;
-  overflow-wrap: anywhere;
+  padding-top: 2px;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 .title-mark {
   flex: 0 0 auto;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
 }
 
 h2 {
-  font-size: 24px;
-  line-height: 1.35;
+  font-size: 28px;
+  line-height: 1.3;
   font-weight: 800;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
+  overflow-wrap: anywhere;
 }
 
 .with-mark {
@@ -112,28 +133,27 @@ h2 {
 .empty,
 .guide-text,
 .expense-category,
-.confirm-copy,
-.day-sheet-empty {
+.day-sheet-empty,
+.footnote,
+.keep-notice {
   font-size: 18px;
   font-weight: 400;
 }
 
-.footnote {
-  font-size: 16px;
-  font-weight: 400;
-}
-
 .lead {
-  margin-top: 12px;
+  margin-top: 8px;
   color: var(--ink-soft);
+  font-weight: 700;
 }
 
 .current-trip {
-  margin-top: 12px;
-  padding: 10px 14px;
-  border: 1px solid var(--line);
+  margin-top: 8px;
+  padding: 8px 12px;
+  border: 3px solid transparent;
   border-radius: 16px;
-  background: var(--card);
+  background:
+    linear-gradient(#fffdfb, #fff7f1) padding-box,
+    var(--bling) border-box;
   box-shadow: var(--shadow);
   font-size: 30px;
   font-weight: 800;
@@ -141,25 +161,28 @@ h2 {
   overflow-wrap: anywhere;
 }
 
+.current-trip::before {
+  content: "🧳 ";
+}
+
 .btn-new-trip {
   min-height: 56px;
-  margin-top: 12px;
-  font-size: 22px;
+  margin-top: 8px;
+  font-size: 21px;
 }
 
 .keep-notice {
-  margin-top: 12px;
-  padding: 12px 14px;
-  border: 1px solid #f0d2bc;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 2px solid #f0c8dc;
   border-radius: 14px;
-  background: #fff3e8;
-  font-size: 18px;
+  background: #fff0f6;
   font-weight: 700;
 }
 
 .delete-trip-name {
-  margin-top: 12px;
-  font-size: 26px;
+  margin-top: 8px;
+  font-size: 28px;
   font-weight: 800;
   line-height: 1.35;
   overflow-wrap: anywhere;
@@ -172,19 +195,21 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px;
+  padding: 10px;
   background: rgba(56, 43, 38, 0.45);
 }
 
 .modal-card {
   width: min(520px, 100%);
-  max-height: calc(100vh - 24px);
-  max-height: calc(100dvh - 24px);
+  max-height: calc(100vh - 20px);
+  max-height: calc(100dvh - 20px);
   overflow-y: auto;
-  padding: 18px 14px;
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  background: var(--card);
+  padding: 14px 12px;
+  border: 3px solid transparent;
+  border-radius: 22px;
+  background:
+    linear-gradient(#fffdfb, #fff7fb) padding-box,
+    var(--bling) border-box;
   box-shadow: 0 8px 24px rgba(56, 43, 38, 0.12);
 }
 
@@ -197,26 +222,43 @@ body.modal-open {
 }
 
 .storage-notice {
-  margin-top: 12px;
-}
-
-.page-header {
-  margin-bottom: 14px;
+  margin-top: 8px;
 }
 
 .card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 20px;
+  border: 3px solid transparent;
+  border-radius: 22px;
+  background:
+    linear-gradient(#fffdfb, #fffaf6) padding-box,
+    var(--bling) border-box;
   box-shadow: var(--shadow);
-  padding: 16px 14px;
-  margin-bottom: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+#no-trip,
+#trip-card {
+  background:
+    linear-gradient(#fbf7ff, #f6f0ff) padding-box,
+    var(--bling) border-box;
+}
+
+#calculator > section.card:nth-of-type(1) {
+  background:
+    linear-gradient(#fff8f3, #fff1e8) padding-box,
+    var(--bling) border-box;
+}
+
+#summary {
+  background:
+    linear-gradient(#f5fff8, #eefaf3) padding-box,
+    var(--bling) border-box;
 }
 
 label {
   display: block;
-  margin: 12px 0 6px;
-  font-size: 20px;
+  margin: 8px 0 4px;
+  font-size: 21px;
   font-weight: 700;
 }
 
@@ -225,7 +267,7 @@ select,
 button {
   max-width: 100%;
   font-family: inherit;
-  font-size: 20px;
+  font-size: 21px;
   color: var(--ink);
 }
 
@@ -235,42 +277,43 @@ select {
   display: block;
   width: 100%;
   min-width: 0;
-  min-height: 52px;
-  padding: 10px 14px;
+  min-height: 56px;
+  padding: 10px 12px;
   color: var(--ink);
   background: #fff;
-  border: 1px solid var(--line-strong);
+  border: 2px solid #e7d3c4;
   border-radius: 14px;
 }
 
 select {
   appearance: none;
-  padding-right: 44px;
+  padding-right: 48px;
+  background-color: #fff;
   background-image:
     linear-gradient(45deg, transparent 50%, var(--ink) 50%),
     linear-gradient(135deg, var(--ink) 50%, transparent 50%);
   background-position:
-    calc(100% - 22px) calc(50% - 3px),
-    calc(100% - 13px) calc(50% - 3px);
-  background-size: 9px 9px, 9px 9px;
+    calc(100% - 24px) calc(50% - 4px),
+    calc(100% - 12px) calc(50% - 4px);
+  background-size: 12px 12px, 12px 12px;
   background-repeat: no-repeat;
 }
 
 input::placeholder {
-  color: #6f5e52;
+  color: #6b564b;
   opacity: 1;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
 }
 
 input:focus-visible,
 select:focus-visible,
 button:focus-visible {
-  outline: 3px solid #382b26;
+  outline: 3px solid #2c211c;
   outline-offset: 2px;
 }
 
@@ -279,6 +322,7 @@ button:focus-visible {
   align-items: center;
   gap: 8px;
   max-width: 100%;
+  min-width: 0;
 }
 
 .money-field input {
@@ -289,20 +333,20 @@ button:focus-visible {
 
 .money-unit {
   flex: 0 0 auto;
-  font-size: 20px;
+  font-size: 21px;
   font-weight: 800;
 }
 
 .hint {
-  margin-top: 6px;
+  margin-top: 4px;
   color: var(--ink-soft);
 }
 
 .message {
-  margin-top: 12px;
-  padding: 12px 14px;
+  margin-top: 8px;
+  padding: 10px 12px;
   border-radius: 14px;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   line-height: 1.4;
   white-space: pre-line;
@@ -325,21 +369,22 @@ button:focus-visible {
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 52px;
-  margin-top: 12px;
-  padding: 10px 16px;
+  min-height: 56px;
+  margin-top: 8px;
+  padding: 8px 12px;
   border-radius: 14px;
-  font-size: 20px;
+  font-size: 21px;
   font-weight: 800;
   line-height: 1.3;
   text-align: center;
   cursor: pointer;
+  overflow-wrap: anywhere;
 }
 
 .btn-primary {
   color: var(--ink);
-  background: var(--peach);
-  border: 2px solid #f0c2a6;
+  background: linear-gradient(180deg, #ffe3d2, #ffc9aa);
+  border: 2px solid #f0b89a;
 }
 
 .btn-primary:hover {
@@ -354,21 +399,25 @@ button:focus-visible {
 
 .btn-secondary {
   color: var(--ink);
-  background: #fff;
-  border: 2px solid #d7c4b0;
+  background: #fbf7ff;
+  border: 2px solid #d9c8f0;
 }
 
 .btn-secondary:hover {
-  background: #fff8ef;
+  background: #f4ecff;
 }
 
 .btn-secondary:active {
-  background: #f6ebe1;
-  border-color: #382b26;
+  background: #efe4ff;
+  border-color: #2c211c;
 }
 
 .trip-manage-toggle {
   gap: 8px;
+}
+
+#trip-manage-label::before {
+  content: "🌸 ";
 }
 
 .trip-manage-arrow {
@@ -383,11 +432,12 @@ button:focus-visible {
 .trip-manage-toggle[aria-expanded="true"]:active {
   color: var(--ink);
   background: #fff1e6;
-  border: 3px solid #382b26;
+  border: 2px solid #2c211c;
+  box-shadow: inset 0 0 0 1px #2c211c;
 }
 
 .trip-manage label:first-of-type {
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 #view-all,
@@ -395,6 +445,10 @@ button:focus-visible {
   color: var(--ink);
   background: #fff;
   border: 2px solid #d7c4b0;
+}
+
+.day-edit-toggle::before {
+  content: "📝 ";
 }
 
 #view-all:hover,
@@ -412,7 +466,8 @@ button:focus-visible {
 .day-edit-toggle[aria-pressed="true"]:active {
   color: var(--ink);
   background: #fff1e6;
-  border: 3px solid #382b26;
+  border: 2px solid #2c211c;
+  box-shadow: inset 0 0 0 1px #2c211c;
 }
 
 .btn-delete {
@@ -441,27 +496,33 @@ button:focus-visible {
   justify-content: space-between;
   align-items: baseline;
   gap: 4px 12px;
-  padding: 8px 2px;
+  min-width: 0;
+  padding: 6px 2px;
   border-bottom: 1px solid #f3e6d8;
 }
 
+.summary-row dt,
+.summary-row dd {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .summary-row dt {
-  font-size: 20px;
+  font-size: 21px;
   font-weight: 700;
 }
 
 .summary-row dd {
-  max-width: 100%;
   margin-left: auto;
-  font-size: 28px;
+  font-size: 34px;
   font-weight: 800;
-  line-height: 1.3;
+  line-height: 1.25;
   overflow-wrap: anywhere;
 }
 
 .summary-row:has(#remain-label) {
   margin-top: 4px;
-  padding: 12px;
+  padding: 10px 12px;
   border: none;
   border-radius: 16px;
   background: var(--mint);
@@ -472,8 +533,12 @@ button:focus-visible {
   color: var(--green);
 }
 
+#remain-label::before {
+  content: "✨ ";
+}
+
 #remain-value {
-  font-size: 32px;
+  font-size: 36px;
 }
 
 .summary-row:has(#remain-value.is-over) {
@@ -487,8 +552,8 @@ button:focus-visible {
 }
 
 .guide {
-  margin-top: 12px;
-  padding: 12px 14px;
+  margin-top: 8px;
+  padding: 10px 12px;
   border-radius: 16px;
   border: 1px solid transparent;
 }
@@ -522,24 +587,25 @@ button:focus-visible {
 }
 
 .empty {
-  margin-top: 10px;
+  margin-top: 8px;
   color: var(--ink-soft);
 }
 
 .list-tools .btn {
-  margin-top: 4px;
+  margin-top: 8px;
 }
 
 .day-total {
-  margin-top: 12px;
-  padding: 12px 14px;
+  margin-top: 8px;
+  padding: 10px 12px;
   border-radius: 16px;
   border: 1px solid #b7dfc6;
   background: var(--mint);
   color: var(--green);
-  font-size: 22px;
+  font-size: 32px;
   font-weight: 800;
-  line-height: 1.35;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
 .day-sheet {
@@ -548,21 +614,26 @@ button:focus-visible {
 }
 
 .day-edit-toggle {
-  min-height: 52px;
+  min-height: 56px;
   margin-top: 8px;
   margin-bottom: 4px;
 }
 
 .day-sheet-title {
   margin: 2px 0 0;
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 800;
-  line-height: 1.35;
+  line-height: 1.3;
   overflow-wrap: anywhere;
 }
 
+.day-sheet-title::before,
+.date-heading h3::before {
+  content: "📅 ";
+}
+
 .day-sheet-empty {
-  margin-top: 10px;
+  margin-top: 8px;
   color: var(--ink-soft);
 }
 
@@ -575,7 +646,7 @@ button:focus-visible {
 
 .day-line {
   max-width: 100%;
-  padding: 11px 2px;
+  padding: 8px 2px;
 }
 
 .day-line + .day-line {
@@ -585,9 +656,10 @@ button:focus-visible {
 .day-line-main,
 .day-sum {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 4px 12px;
   max-width: 100%;
   min-width: 0;
 }
@@ -596,7 +668,7 @@ button:focus-visible {
 .day-sum-label {
   flex: 1 1 auto;
   min-width: 0;
-  font-size: 20px;
+  font-size: 21px;
   font-weight: 700;
   line-height: 1.35;
   overflow-wrap: anywhere;
@@ -604,25 +676,27 @@ button:focus-visible {
 
 .day-line-amount,
 .day-sum-amount {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
   margin-left: auto;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
   line-height: 1.35;
   text-align: right;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .day-sum {
   margin-top: 6px;
-  padding: 12px;
+  padding: 10px 12px;
   border-radius: 14px;
-  background: var(--peach-soft);
+  background: #ffe8d8;
 }
 
 .day-sum-label,
 .day-sum-amount {
-  font-size: 22px;
+  font-size: 32px;
   font-weight: 800;
   color: var(--ink);
 }
@@ -630,7 +704,7 @@ button:focus-visible {
 .day-line-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 8px;
   width: 100%;
   margin-top: 8px;
 }
@@ -638,9 +712,9 @@ button:focus-visible {
 .day-line-actions .btn,
 .day-line .button-stack .btn,
 .day-line .edit-box .btn {
-  min-height: 52px;
+  min-height: 56px;
   margin-top: 0;
-  font-size: 20px;
+  font-size: 21px;
 }
 
 .day-line .edit-box,
@@ -650,7 +724,7 @@ button:focus-visible {
 }
 
 .date-group {
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .date-heading {
@@ -659,25 +733,32 @@ button:focus-visible {
   justify-content: space-between;
   align-items: baseline;
   gap: 4px 12px;
-  margin-bottom: 8px;
+  min-width: 0;
+  margin-bottom: 6px;
 }
 
 .date-heading h3 {
-  font-size: 22px;
-  line-height: 1.35;
+  min-width: 0;
+  font-size: 28px;
+  line-height: 1.3;
   font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .date-subtotal {
+  min-width: 0;
+  max-width: 100%;
   margin-left: auto;
-  font-size: 20px;
+  font-size: 21px;
   font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .expense-date {
-  margin-top: 8px;
-  font-size: 20px;
+  margin-top: 6px;
+  font-size: 21px;
   font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .expense-date.is-undated {
@@ -686,7 +767,7 @@ button:focus-visible {
 
 .assign-date,
 .edit-box {
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .assign-date label {
@@ -697,19 +778,21 @@ button:focus-visible {
   list-style: none;
   padding: 0;
   display: grid;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .expense-item {
-  padding: 12px;
-  border: 1px solid var(--line);
+  min-width: 0;
+  padding: 10px;
+  border: 2px solid #ead7f2;
   border-radius: 16px;
   background: #fffdfb;
 }
 
 .expense-item.is-new {
   border-color: #e8b89a;
+  background: #fff8f3;
 }
 
 .expense-top {
@@ -717,7 +800,8 @@ button:focus-visible {
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 6px 12px;
+  gap: 4px 12px;
+  min-width: 0;
 }
 
 .expense-name {
@@ -729,9 +813,10 @@ button:focus-visible {
 }
 
 .expense-amount {
+  min-width: 0;
   max-width: 100%;
   margin-left: auto;
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 800;
   overflow-wrap: anywhere;
 }
@@ -741,7 +826,7 @@ button:focus-visible {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 .expense-category {
@@ -764,17 +849,40 @@ button:focus-visible {
 }
 
 .confirm-copy {
-  margin-top: 10px;
+  margin-top: 8px;
+  font-size: 20px;
   font-weight: 700;
 }
 
 .button-stack {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .button-stack .btn {
   margin-top: 0;
+}
+
+.backup-note {
+  margin-top: 4px;
+  color: var(--ink);
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.backup-btn {
+  min-height: 56px;
+  margin-top: 12px;
+  font-size: 22px;
+}
+
+.restore-summary p {
+  margin-top: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .footnote {
@@ -786,9 +894,9 @@ button:focus-visible {
   display: none !important;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 430px) {
   .page-title {
-    font-size: 26px;
+    font-size: 28px;
   }
 
   .title-mark {
@@ -814,21 +922,65 @@ button:focus-visible {
   }
 
   .summary-row dd {
-    font-size: 28px;
+    font-size: 34px;
   }
 
   #remain-value {
-    font-size: 32px;
+    font-size: 36px;
   }
+}
 
-  .day-line-main,
-  .day-sum {
-    flex-direction: row;
-    align-items: flex-start;
-  }
+.quick-expenses {
+  min-width: 0;
+  margin-top: 4px;
+}
 
-  .day-line-amount,
-  .day-sum-amount {
-    margin-left: auto;
+.quick-lead {
+  margin-top: 8px;
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.quick-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 8px;
+  min-width: 0;
+  margin-top: 8px;
+}
+
+.quick-btn {
+  min-width: 0;
+  min-height: 56px;
+  margin-top: 0;
+  padding: 8px 10px;
+  color: var(--ink);
+  background: #fff;
+  border: 2px solid #d9c8f0;
+  white-space: normal;
+}
+
+.quick-btn:hover {
+  background: #fbf7ff;
+}
+
+.quick-btn:active,
+.quick-btn[aria-pressed="true"],
+.quick-btn[aria-pressed="true"]:hover,
+.quick-btn[aria-pressed="true"]:active {
+  color: var(--ink);
+  background: #fff1e6;
+  border: 2px solid #2c211c;
+  box-shadow: inset 0 0 0 1px #2c211c;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
   }
 }
